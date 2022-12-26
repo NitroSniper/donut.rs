@@ -23,6 +23,8 @@ fn main() {
     // generate the angles
     for step in 0..(TAU/CIRCLE_STEPS) as usize {
         theta = step as f64 *CIRCLE_STEPS;
+
+        //generate point in circle with trig
         circle_x = theta.cos()*RADIUS + X_OFFSET;
         circle_y = theta.sin()*RADIUS;
         
