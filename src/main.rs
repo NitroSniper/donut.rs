@@ -24,6 +24,10 @@ fn main() {
     let A: f64 = 0.0;
     let B: f64 = 0.0;
 
+    // K Constants
+    let k_1: f64 = 1.0;
+    let k_2: f64 = 1.0;
+
     // rotate the torus around y axis
     // cargo clippy suggests TAU in std instead of 6.28
     for phi in 0..(TAU/TORUS_STEPS) as usize {
@@ -55,7 +59,16 @@ fn main() {
                 y: torus_points.x * B.sin() + torus_points.y*A.cos()*B.cos() - torus_points.z*A.sin()*B.cos(),
                 z: torus_points.y*A.sin() + torus_points.z*A.cos(),
             };
-            dbg!(&transformed_point);
+            
+            // now we need to translate it to the user to a 2D screen
+            
+            let screen_point = Point { 
+                x: k_1*transformed_point.x/(k_2 + transformed_point.z),
+                y: k_1*transformed_point.y/(k_2 + transformed_point.z),
+                z: 0.0 
+            };
+            dbg!(&screen_point);
+
         }
     }
 }
