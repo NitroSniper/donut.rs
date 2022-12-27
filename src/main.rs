@@ -1,17 +1,11 @@
 use std::f64::consts::TAU;
 
+#[derive(Debug)]
 struct Point {
     x: f64,
     y: f64,
     z: f64,
 }
-
-impl Point {
-    fn new() -> Self {
-        Point { x: 0.0, y: 0.0, z: 0.0 }
-    }
-}
-
 
 fn main() {
     // let (x, y, z) = (R_2, 0, 0) + (r*cos(theta), r*sin(theta), 0)
@@ -26,13 +20,14 @@ fn main() {
     const CIRCLE_STEPS: f64 = 0.02;
     const TORUS_STEPS: f64 = 0.02;
     
-    // cargo clippy suggests TAU in std instead of 6.28
     // generate the angles
     let A: f64 = 0.0;
     let B: f64 = 0.0;
-    
-    
+
+    // rotate the torus around y axis
+    // cargo clippy suggests TAU in std instead of 6.28
     for phi in 0..(TAU/TORUS_STEPS) as usize {
+        // rotate the angle around the circle
         for theta in 0..(TAU/CIRCLE_STEPS) as usize {
         
             // hold the angle in the circle 
@@ -55,12 +50,12 @@ fn main() {
             };
 
             // now we want to transform it by rotating in on the x and z axis
-            
             let transformed_point = Point {
                 x: torus_points.x * B.cos() - torus_points.y*A.cos()*B.sin() + torus_points.z*A.sin()*B.sin(),
                 y: torus_points.x * B.sin() + torus_points.y*A.cos()*B.cos() - torus_points.z*A.sin()*B.cos(),
                 z: torus_points.y*A.sin() + torus_points.z*A.cos(),
             };
+            dbg!(&transformed_point);
         }
     }
 }
