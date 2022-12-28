@@ -29,11 +29,13 @@ fn main() {
     
     // generate the angles
     let a: f64 = 0.0;
-    let B: f64 = 0.0;
-
+    let b: f64 = 0.0;
+    const SCREEN_WIDTH: f64 = 100.0;
+    const SCREEN_HEIGHT: f64 = 100.0;
     // K Constants
-    let k_1: f64 = 1.0;
-    let k_2: f64 = 1.0;
+    // Calculate K1 with the screen size which is the terminal
+    let k_2: f64 = 5.0;
+    let k_1: f64 = SCREEN_WIDTH*k_2*3.0/(8.0*(RADIUS+X_OFFSET));
 
     // rotate the torus around y axis
     // cargo clippy suggests TaU in std instead of 6.28
@@ -45,48 +47,16 @@ fn main() {
             let theta = theta as f64 * CIRCLE_STEPS;
             // hold the angle in torus
             let phi = phi as f64 * TORUS_STEPS;
-
-            //generate point in circle with trig
-            let circle_points = Point2D { 
-                x: theta.cos()*RADIUS + X_OFFSET,
-                y: theta.sin()*RADIUS,
-            };
-            
-            // create torus Point struct with the rotation matrix
-            let torus_points = Point3D {
-                x: circle_points.x * phi.cos(),
-                y: circle_points.y,
-                z: circle_points.x * phi.sin()
-            };
-
-            // now we want to transform it by rotating in on the x and z axis
-            let transformed_point = Point3D {
-                x: torus_points.x * B.cos() - torus_points.y*a.cos()*B.sin() + torus_points.z*a.sin()*B.sin(),
-                y: torus_points.x * B.sin() + torus_points.y*a.cos()*B.cos() - torus_points.z*a.sin()*B.cos(),
-                z: torus_points.y*a.sin() + torus_points.z*a.cos(),
-            };
-            
-            // now we need to translate it to the user to a 2D screen
-            
-            let screen_point = Point2D { 
-                x: k_1*transformed_point.x/(k_2 + transformed_point.z),
-                y: k_1*transformed_point.y/(k_2 + transformed_point.z),
-            };
-            
-
-            // old implementation above. since I have an understanding it is time to optimize the
-            // calculation. 
             
             // store all sin and cos of the angles. 
-            
             let sin_theta = theta.sin();
             let cos_theta = theta.cos();
             let sin_phi = phi.sin();
             let cos_phi = phi.cos();
             let sin_a = a.sin();
             let cos_a = a.cos();
-            let sin_B = B.sin();
-            let cos_B = B.cos();
+            let sin_b = b.sin();
+            let cos_b = b.cos();
 
 
 
@@ -95,18 +65,37 @@ fn main() {
                 y: sin_theta*RADIUS
             };
 
-            let transformed_point_new = Point3D {
-                x: circle_point.x*(cos_B*cos_phi + sin_a*sin_B*sin_phi) - circle_point.y*cos_a*sin_B,
-                y: circle_point.x*(sin_B*cos_phi - sin_a*cos_B*sin_phi) + circle_point.y*cos_a*cos_B,
+            let transformed_point = Point3D {
+                x: circle_point.x*(cos_b*cos_phi + sin_a*sin_b*sin_phi) - circle_point.y*cos_a*sin_b,
+                y: circle_point.x*(sin_b*cos_phi - sin_a*cos_b*sin_phi) + circle_point.y*cos_a*cos_b,
                 z: circle_point.x*cos_a*sin_phi+circle_point.y*sin_a,
             };
-            assert_eq!(transformed_point.x, transformed_point_new.x);
-            assert_eq!(transformed_point.y, transformed_point_new.y);
-            assert_eq!(transformed_point.z, transformed_point_new.z);
 
-             
+            // now we need to calculate the screen position of the 3D transformed_point
+            
+            // store inverse of z+k_2 for peformance
+            let inverse_z = 1.0/(transformed_point.z+k_2);
+            // since we are writing this on a terminal which doesn't consider the origin as the
+            // middle. we have to offset the drawing to match our calculation.
+            let screen_point = Point2D {
+                x: SCREEN_WIDTH/2.0 + k_1*inverse_z*transformed_point.x,
+                y: SCREEN_HEIGHT/2.0 - k_1*inverse_z*transformed_point.y, // - because y goes
+                                                                          // downwards.
+            };
+            // now time to create lighting which follows the same matrix calculation cause a circle
+            // at the orgin mirrors the surface normal. 
+            // we will also do a dot product on it to calcluate the number. 
+            let lighting = {
+                cos_phi*cos_theta*sin_a-
+                cos_a*cos_theta*sin_phi-
+                sin_a*sin_theta+
+                cos_b*(cos_a*sin_theta-cos_theta*sin_a*sin_phi)
+            };
 
-            // I'm gonna combine all the matrix calculation.
+
+
+            
+        
         }
     }
 }
